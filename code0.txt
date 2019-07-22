@@ -1,0 +1,4 @@
+for i in {1..8}
+do sudo btmgmt find>test1.txt; python3 test1.py3
+done
+

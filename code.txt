@@ -1,0 +1,134 @@
+from __future__ import print_function
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
+from oauth2client.service_account import ServiceAccountCredentials
+import datetime
+import csv
+def speak(a):
+ import os
+ os.system("omxplayer -b /home/pi/Downloads/" + a + ".m4a")
+def gone(a):
+ import os
+ os.system("omxplayer -b /home/pi/Downloads/gonebus/" + a + ".m4a")
+
+MY_SPREADSHEET_ID = '1SvoY2EGM3SFX4qsiVkFOj6fLfWkvd5zhcKp32JUwEpo'
+def update_sheet(sheetname,busid,destination):
+ SCOPES = 'https://www.googleapis.com/auth/spreadsheets'
+ creds = ServiceAccountCredentials.from_json_keyfile_name(
+          'project.json', SCOPES)
+ service = build('sheets', 'v4', http=creds.authorize(Http()))
+ values = [ [ str(datetime.datetime.now().date()),str(datetime.datetime.now().time()), busid,destination] ]
+ body = { 'values': values }
+ result = service.spreadsheets().values().append(
+    spreadsheetId=MY_SPREADSHEET_ID,
+    range= sheetname +'!A1:D1',
+    valueInputOption='USER_ENTERED',
+    insertDataOption='INSERT_ROWS',
+    body=body).execute()
+
+
+def fun1():
+ sheetname=''
+ for i in range(len(name)):
+  busid=name[i]
+  destin=dest[i]
+  print ('BusId',busid)
+  print ('Destination',destin)
+   if busid == 'f1':
+    sheetname = 'Sheet1'
+   elif busid == 'f2':
+    sheetname = 'Sheet2'
+   elif busid == 'f4':
+    sheetname = 'Sheet3'
+   flag1= 0
+   for i in range(len(name)):
+    for j in range(len(prevname)):
+     if name[i]== prevname[j]:
+      flag1 = 1
+    if flag1 == 0:
+     update_sheet(sheetname, busid, destin)
+      
+
+
+f=open('test1.txt','r')
+words=[]
+mac=[]
+rssi=[]
+for line in f.readlines():
+ if 'dev_found:' in line:
+  linewords=line.split()
+  ind=linewords.index('dev_found:')
+  words.append(linewords[ind+1])
+
+ if 'rssi' in line:
+  ind2=linewords.index('rssi')
+  words.append(linewords[ind2 +1])
+
+print(words)
+with open('mango.txt') as f:
+ lines = f.read().splitlines()
+
+k=0
+for i in range(len(lines)):
+ for j in range(len(words)):
+  if(lines[i] == words[j]):
+
+   mac.append(words[j])
+   rssi.append(words[j+1])
+  j=j+2
+ i=i+1
+print(mac,rssi)
+
+f2= open('data.csv', 'r')
+reader = csv.reader(f2)
+your_list = list(reader)
+l = [item for sublist in your_list for item in sublist]
+name =[]
+dest=[]
+
+for i in range(len(mac)):
+ for j in range(len(l)):
+  if(mac[i] == l[j]):
+   print(l[j],l[j+1],l[j+2],rssi[i])
+   name.append(l[j+1])
+   dest.append(l[j+2])
+  j=j+3
+ i=i+1
+print(name)
+
+
+gonebus=[]
+prevname=[]
+f3=open('temp.txt','r')
+for line in f3:
+ for word in line.split():
+  prevname.append(word)
+for i in range(len(prevname)):
+ flag=0
+ for j in range(len(name)):
+  if prevname[i]==name[j]:
+   flag=1
+ if flag==0:
+  gonebus.append(prevname[i])
+f3.close()
+print('gone')
+print(gonebus)
+
+
+f4=open('temp.txt','w')
+for item in name:
+ f4.writelines('%s ' % item)
+f4.close()
+
+
+if len(name)>0:
+ for i in range(len(name)):
+  speak(name[i])
+ fun1()
+
+
+
+
+
+
